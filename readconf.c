@@ -179,7 +179,7 @@ typedef enum {
 	oPubkeyAcceptedAlgorithms, oCASignatureAlgorithms, oProxyJump,
 	oSecurityKeyProvider, oKnownHostsCommand, oRequiredRSASize,
 	oEnableEscapeCommandline, oObscureKeystrokeTiming, oChannelTimeout,
-	oIgnore, oIgnoredUnknownOption, oDeprecated, oUnsupported
+	oIgnore, oIgnoredUnknownOption, oDeprecated, oUnsupported, oUseMPTCP
 } OpCodes;
 
 /* Textual representations of the tokens. */
@@ -329,6 +329,7 @@ static struct {
 	{ "enableescapecommandline", oEnableEscapeCommandline },
 	{ "obscurekeystroketiming", oObscureKeystrokeTiming },
 	{ "channeltimeout", oChannelTimeout },
+	{ "usemptcp", oUseMPTCP},
 
 	{ NULL, oBadOption }
 };
@@ -2388,6 +2389,10 @@ parse_pubkey_algos:
 		}
 		break;
 
+	case oUseMPTCP:
+		intptr = &options->use_mptcp;
+		goto parse_flag;
+
 	case oDeprecated:
 		debug("%s line %d: Deprecated option \"%s\"",
 		    filename, linenum, keyword);
@@ -2644,6 +2649,7 @@ initialize_options(Options * options)
 	options->tag = NULL;
 	options->channel_timeouts = NULL;
 	options->num_channel_timeouts = 0;
+	options->use_mptcp = -1;
 }
 
 /*
@@ -2835,6 +2841,8 @@ fill_default_options(Options * options)
 		options->canonicalize_hostname = SSH_CANONICALISE_NO;
 	if (options->fingerprint_hash == -1)
 		options->fingerprint_hash = SSH_FP_HASH_DEFAULT;
+	if (options->use_mptcp == -1)
+		options->use_mptcp = 0;
 #ifdef ENABLE_SK_INTERNAL
 	if (options->sk_provider == NULL)
 		options->sk_provider = xstrdup("internal");
@@ -3556,6 +3564,7 @@ dump_client_config(Options *o, const char *host)
 	dump_cfg_fmtint(oVisualHostKey, o->visual_host_key);
 	dump_cfg_fmtint(oUpdateHostkeys, o->update_hostkeys);
 	dump_cfg_fmtint(oEnableEscapeCommandline, o->enable_escape_commandline);
+	dump_cfg_fmtint(oUseMPTCP, o->use_mptcp);
 
 	/* Integer options */
 	dump_cfg_int(oCanonicalizeMaxDots, o->canonicalize_max_dots);
